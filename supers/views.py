@@ -11,8 +11,15 @@ from .models import Supers
 def supers_list(request):
     
     if request.method == 'GET':
-        supers = Supers.objects.all()
-        serializer = SupersSerializer(supers, many=True)
+
+        super_param = request.query_params.get('super_type') 
+        queryset = Supers.objects.all()
+
+        if super_param:         #if parameter, filter
+            queryset = queryset.filter(super_type__type = super_param)
+            print(queryset)
+
+        serializer = SupersSerializer(queryset, many=True)
         return Response(serializer.data)
     
     elif request.method == 'POST':
