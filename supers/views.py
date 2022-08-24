@@ -5,6 +5,7 @@ from rest_framework.decorators import api_view
 from rest_framework import status
 from .serializers import SupersSerializer
 from .models import Supers
+from super_types.models import SuperType
 
 # Create your views here.
 @api_view(['GET', 'POST'])
@@ -17,10 +18,20 @@ def supers_list(request):
 
         if super_param:         #if parameter, filter
             queryset = queryset.filter(super_type__type = super_param)
-            print(queryset)
+            serializer = SupersSerializer(queryset, many=True)
+            return Response(serializer.data)
 
-        serializer = SupersSerializer(queryset, many=True)
-        return Response(serializer.data)
+        else:
+            super_types = SuperType.objects.all()
+            custom_response_dict = {}
+            for type in super_types:
+                supers = Supers.objects.filter(super_type=type.id)
+                supers_serializer = SupersSerializer(supers, many=True)
+                custom_response_dict[type.type] = {
+                    'supers': supers_serializer.data
+                }
+           
+            return Response(custom_response_dict)
     
     elif request.method == 'POST':
         serializer = SupersSerializer(data=request.data)
